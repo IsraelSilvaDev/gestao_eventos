@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Login do Organizador{% endblock %}
+
+{% block content %}
+<div class="card card-container shadow-sm">
+    <div class="card-body p-5">
+        <h1 class="card-title text-center mb-4">Login do Organizador</h1>
+        
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+                Seu usuário ou senha estão incorretos. Tente novamente.
+            </div>
+            
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Usuário</label>
+                {{ form.username.as_widget.attrs.class_name }}
+                <input type="text" name="username" class="form-control" id="{{ form.username.id_for_label }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Senha</label>
+                <input type="password" name="password" class="form-control" id="{{ form.password.id_for_label }}" required>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

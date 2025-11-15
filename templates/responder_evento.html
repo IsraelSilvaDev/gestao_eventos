@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Responder: {{ evento.nome }}{% endblock %}
+
+{% block content %}
+<div class="card card-container shadow-sm">
+    <div class="card-body p-4 p-md-5">
+        <div class="event-details p-4 mb-4 text-center">
+            <h4 class="mb-1">{{ evento.nome }}</h4>
+            <p class="mb-1"><strong>Quando:</strong> {{ evento.data|date:"d/m/Y" }} às {{ evento.data|date:"H:i" }}</p>
+            <p class="mb-0"><strong>Onde:</strong> {{ evento.local }}</p>
+            {% if evento.descricao %}
+            <p class="mt-2 mb-0 text-muted" style="font-size: 0.9rem;">{{ evento.descricao }}</p>
+            {% endif %}
+        </div>
+
+        <h3 class="text-center mb-4">Sua Resposta</h3>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="{{ form.nome_principal.id_for_label }}" class="form-label">{{ form.nome_principal.label }}</label>
+                {{ form.nome_principal }}
+                {% if form.nome_principal.errors %}
+                <div class="text-danger small">{{ form.nome_principal.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+    <label class="form-label">{{ form.status.label }}</label>
+
+    <!-- 
+      CORREÇÃO: 
+      1. Substituímos "btn-group w-100" por "d-flex w-100 gap-2".
+         - "d-flex" ativa o layout flexível.
+         - "gap-2" cria um espaçamento entre os botões.
+    -->
+    <div class="d-flex w-100 gap-2" role="group" aria-label="Status RSVP">
+        
+        <!-- Botão "Sim" -->
+        <input type="radio" class="btn-check"
+               name="status" id="id_status_confirmado"
+               value="confirmado"
+               {% if form.status.value == "confirmado" %}checked{% endif %}>
+        
+        <!-- 
+          CORREÇÃO: 
+          2. Substituímos "w-50" por "w-100". 
+             Dentro de um container 'd-flex', 'w-100' em cada item faz 
+             com que eles se expandam igualmente para preencher o espaço.
+        -->
+        <label class="btn btn-outline-primary w-100" for="id_status_confirmado">
+            Sim, irei
+        </label>
+
+        <!-- Botão "Não" -->
+        <input type="radio" class="btn-check"
+               name="status" id="id_status_declinado"
+               value="declinado"
+               {% if form.status.value == "declinado" %}checked{% endif %}>
+        
+        <label class="btn btn-outline-primary w-100" for="id_status_declinado">
+            Não poderei ir
+        </label>
+    </div>
+
+    {% if form.status.errors %}
+    <div class="text-danger small">{{ form.status.errors.0 }}</div>
+    {% endif %}
+</div>
+            <!-- Campos que aparecem/desaparecem baseados na seleção -->
+            <div id="campos-confirmacao">
+                <div class="mb-3">
+                    <label for="{{ form.total_pessoas.id_for_label }}" class="form-label">{{ form.total_pessoas.label }}</label>
+                    {{ form.total_pessoas }}
+                    {% if form.total_pessoas.errors %}
+                    <div class="text-danger small">{{ form.total_pessoas.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.observacoes.id_for_label }}" class="form-label">{{ form.observacoes.label }}</label>
+                    {{ form.observacoes }}
+                    {% if form.observacoes.errors %}
+                    <div class="text-danger small">{{ form.observacoes.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Enviar Resposta</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusRadios = document.querySelectorAll('input[name="{{ form.status.name }}"]');
+        const camposConfirmacao = document.getElementById('campos-confirmacao');
+
+        function toggleCampos() {
+            const selecionado = document.querySelector('input[name="{{ form.status.name }}"]:checked');
+            // A string "confirmado" deve corresponder ao valor real no seu backend/formulário
+            if (selecionado && selecionado.value === 'confirmado') { 
+                camposConfirmacao.style.display = 'block';
+            } else {
+                camposConfirmacao.style.display = 'none';
+            }
+        }
+
+        // Adiciona o listener para cada radio button
+        statusRadios.forEach(radio =>{
+            radio.addEventListener('change', toggleCampos);
+            
+            
+        });
+
+        // Chama a função no carregamento da página para definir o estado inicial
+        toggleCampos();
+    });
+</script>
+{% endblock %}

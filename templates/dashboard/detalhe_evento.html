@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Respostas: {{ evento.nome }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ evento.nome }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h2">{{ evento.nome }}</h1>
+    <div>
+        <a href="{% url 'admin:eventos_evento_change' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar Evento</a>
+    </div>
+</div>
+<p class="text-muted">Código de Acesso: <span class="badge bg-dark fs-6">{{ evento.codigo_acesso }}</span></p>
+
+<!-- Resumo -->
+<h3 class="mt-5 mb-3">Resumo das Respostas</h3>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title text-success">Total de Pessoas Confirmadas</h5>
+                <p class="display-4 fw-bold text-success">{{ resumo.soma_pessoas_confirmadas }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Respostas "Confirmado"</h5>
+                <p class="display-4 fw-bold">{{ resumo.total_confirmados }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title text-danger">Respostas "Declinado"</h5>
+                <p class="display-4 fw-bold text-danger">{{ resumo.total_declinados }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Respostas -->
+<h3 class="mt-5 mb-3">Lista de Respostas</h3>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Convidado Principal</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Total de Pessoas</th>
+                        <th scope="col">Observações</th>
+                        <th scope="col">Data da Resposta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resposta in respostas %}
+                    <tr class="{% if resposta.status == 'declinado' %}table-danger{% endif %}">
+                        <td><strong>{{ resposta.nome_principal }}</strong></td>
+                        <td>
+                            {% if resposta.status == 'confirmado' %}
+                                <span class="badge bg-success">Confirmado</span>
+                            {% else %}
+                                <span class="badge bg-danger">Declinado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ resposta.total_pessoas }}</td>
+                        <td>{{ resposta.observacoes|default:"N/A" }}</td>
+                        <td>{{ resposta.data_resposta|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted p-4">Nenhuma resposta recebida ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

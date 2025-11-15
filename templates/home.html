@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Bem-vindo ao RSVP{% endblock %}
+
+{% block content %}
+<div class="card card-container shadow-sm">
+    <div class="card-body p-5">
+        <h1 class="card-title text-center mb-4">Confirme sua Presença</h1>
+        <p class="card-text text-center text-muted mb-4">
+            Por favor, insira o código de acesso que você recebeu no convite para continuar.
+        </p>
+        
+        <form method="post" action="{% url 'home' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.codigo.id_for_label }}" class="form-label">{{ form.codigo.label }}</label>
+                {{ form.codigo }}
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Acessar Evento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

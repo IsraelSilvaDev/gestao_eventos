@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard do Organizador{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Seus Eventos</h1>
+    <a href="{% url 'admin:eventos_evento_add' %}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill me-1" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"/>
+        </svg>
+        Criar Novo Evento
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if eventos %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Nome do Evento</th>
+                            <th scope="col">Data</th>
+                            <th scope="col">Código de Acesso</th>
+                            <th scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evento in eventos %}
+                        <tr>
+                            <td><strong>{{ evento.nome }}</strong></td>
+                            <td>{{ evento.data|date:"d/m/Y H:i" }}</td>
+                            <td><span class="badge bg-secondary">{{ evento.codigo_acesso }}</span></td>
+                            <td>
+                                <a href="{% url 'detalhe_evento' evento.id %}" class="btn btn-outline-primary btn-sm">Ver Respostas</a>
+                                <a href="{% url 'admin:eventos_evento_change' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center p-4">
+                <p class="lead">Você ainda não criou nenhum evento.</p>
+                <a href="{% url 'admin:eventos_evento_add' %}" class="btn btn-primary">Criar seu primeiro evento</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
