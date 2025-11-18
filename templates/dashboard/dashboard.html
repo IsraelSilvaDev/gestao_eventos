@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h2">Seus Eventos</h1>
-    <a href="{% url 'admin:eventos_evento_add' %}" class="btn btn-primary">
+    <a href="{% url 'criar_evento' %}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill me-1" viewBox="0 0 16 16">
             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"/>
         </svg>
@@ -34,7 +34,7 @@
                             <td><span class="badge bg-secondary">{{ evento.codigo_acesso }}</span></td>
                             <td>
                                 <a href="{% url 'detalhe_evento' evento.id %}" class="btn btn-outline-primary btn-sm">Ver Respostas</a>
-                                <a href="{% url 'admin:eventos_evento_change' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                                <a href="{% url 'editar_evento' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar</a>
                             </td>
                         </tr>
                         {% endfor %}

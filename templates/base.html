@@ -28,19 +28,19 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated and user.is_staff %}
-                    
-                    <li class="nav-item">
-                    <span class="navbar-text me-3">
-                        Olá, {{ user.first_name|default:user.username }}!
-                    </span>
-                </li>
+                    {% if user.is_authenticated and user.is_staff %}                  
+                 
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
                          <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin:index' %}">Admin Avançado</a>
                         </li>
+                            <li class="nav-item">
+                                <span class="navbar-text mx-3">
+                                    Olá, {{ user.first_name|default:user.username }}!
+                                </span>
+                            </li>
                         <li class="nav-item">
                             <form action="{% url 'logout' %}" method="post" class="d-inline">
                                 {% csrf_token %}

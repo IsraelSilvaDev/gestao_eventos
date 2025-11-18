@@ -15,4 +15,8 @@ urlpatterns = [
     # URLs do Dashboard (Organizador)
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('dashboard/evento/<int:evento_id>/', views.detalhe_evento_dashboard_view, name='detalhe_evento'),
+
+    # URLS  Criar Evento
+    path('dashboard/criar/', views.criar_evento_view, name='criar_evento'),
+    path('dashboard/evento/<int:evento_id>/editar/', views.editar_evento_view, name='editar_evento'),
 ]

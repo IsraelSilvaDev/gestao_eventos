@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        Editar Evento
+    {% else %}
+        Criar Novo Evento
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card-container">
+    <div classs="card shadow-sm">
+        <div class="card-body">
+            
+            <h2 class="card-title mb-4">
+                {% if form.instance.pk %}
+                    Editar Evento: {{ form.instance.nome }}
+                {% else %}
+                    Criar Novo Evento
+                {% endif %}
+            </h2>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                {{ form.as_p }}
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        {% if form.instance.pk %}
+                            Salvar Alterações
+                        {% else %}
+                            Criar Evento
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

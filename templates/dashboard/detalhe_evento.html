@@ -13,7 +13,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h2">{{ evento.nome }}</h1>
     <div>
-        <a href="{% url 'admin:eventos_evento_change' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar Evento</a>
+        <a href="{% url 'editar_evento' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar Evento</a>
     </div>
 </div>
 <p class="text-muted">Código de Acesso: <span class="badge bg-dark fs-6">{{ evento.codigo_acesso }}</span></p>

@@ -12,7 +12,7 @@ SECRET_KEY = 'django-insecure-!_substitua_por_uma_chave_real_!'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['Israelsilva79.pythonanywhere.com']
+ALLOWED_HOSTS = []
 
 
 # Application definition

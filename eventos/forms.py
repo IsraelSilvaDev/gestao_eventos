@@ -1,5 +1,5 @@
 from django import forms
-from .models import Resposta
+from .models import Resposta, Evento
 
 class CodigoAcessoForm(forms.Form):
     """Formulário para o convidado inserir o código do evento."""
@@ -51,3 +51,26 @@ class RespostaForm(forms.ModelForm):
              raise forms.ValidationError("O número total de pessoas deve ser pelo menos 1.")
 
         return cleaned_data
+    
+class EventoForm(forms.ModelForm):
+       
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+      
+        for field_name, field in self.fields.items():
+               
+            field.widget.attrs['class'] = 'form-control'
+                                
+            if field.label:
+                field.widget.attrs['placeholder'] = field.label
+
+    class Meta:
+        model = Evento
+        
+        fields = ['nome', 'data', 'local', 'descricao']
+                
+        widgets = {
+            'data': forms.DateTimeInput(
+                attrs={'type': 'datetime-local', 'class': 'form-control'}
+            ),
+        }
