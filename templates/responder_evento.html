@@ -94,6 +94,12 @@
                 </div>
             </div>
 
+            <div id="container-acompanhantes" class="mt-4 mb-4" style="display: none;">
+    <h5 class="mb-3 border-bottom pb-2">Dados dos Acompanhantes</h5>
+    <div id="lista-acompanhantes" class="d-flex flex-column gap-3">
+        </div>
+</div>
+
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg">Enviar Resposta</button>
             </div>
@@ -105,28 +111,77 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const statusRadios = document.querySelectorAll('input[name="{{ form.status.name }}"]');
+        const statusRadios = document.querySelectorAll('input[name="status"]');
         const camposConfirmacao = document.getElementById('campos-confirmacao');
+        const totalPessoasInput = document.getElementById('id_total_pessoas');
+        const containerAcompanhantes = document.getElementById('container-acompanhantes');
+        const listaAcompanhantes = document.getElementById('lista-acompanhantes');
 
-        function toggleCampos() {
-            const selecionado = document.querySelector('input[name="{{ form.status.name }}"]:checked');
-            // A string "confirmado" deve corresponder ao valor real no seu backend/formulário
-            if (selecionado && selecionado.value === 'confirmado') { 
+        // Recebe os dados do backend caso seja uma Edição
+        const acompanhantesIniciais = [
+            {% for a in acompanhantes %}
+            { nome: "{{ a.nome_completo|escapejs }}", doc: "{{ a.documento|escapejs }}" }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        function atualizarUI() {
+            const statusSelecionado = document.querySelector('input[name="status"]:checked');
+            
+            if (statusSelecionado && statusSelecionado.value === 'confirmado') { 
                 camposConfirmacao.style.display = 'block';
+                
+                let total = parseInt(totalPessoasInput.value) || 1;
+                let numAcompanhantes = total - 1; // Desconta o convidado principal
+                
+                if (numAcompanhantes > 0) {
+                    containerAcompanhantes.style.display = 'block';
+                    let itensAtuais = listaAcompanhantes.querySelectorAll('.acompanhante-item');
+                    
+                    // Adiciona os campos de acompanhantes faltantes
+                    while (itensAtuais.length < numAcompanhantes) {
+                        let idx = itensAtuais.length;
+                        let div = document.createElement('div');
+                        div.className = 'p-3 bg-light border rounded acompanhante-item';
+                        
+                        // Resgata o valor se for edição
+                        let valNome = acompanhantesIniciais[idx] ? acompanhantesIniciais[idx].nome : '';
+                        let valDoc = acompanhantesIniciais[idx] ? acompanhantesIniciais[idx].doc : '';
+
+                        div.innerHTML = `
+                            <h6>Acompanhante ${idx + 1}</h6>
+                            <div class="row g-2 mt-2">
+                                <div class="col-md-7">
+                                    <input type="text" name="acompanhante_nome[]" value="${valNome}" class="form-control" placeholder="Nome Completo" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="text" name="acompanhante_doc[]" value="${valDoc}" class="form-control" placeholder="RG ou CPF" required>
+                                </div>
+                            </div>
+                        `;
+                        listaAcompanhantes.appendChild(div);
+                        itensAtuais = listaAcompanhantes.querySelectorAll('.acompanhante-item');
+                    }
+                    
+                    // Remove campos caso o usuário reduza o total de pessoas
+                    while (itensAtuais.length > numAcompanhantes) {
+                        listaAcompanhantes.removeChild(listaAcompanhantes.lastChild);
+                        itensAtuais = listaAcompanhantes.querySelectorAll('.acompanhante-item');
+                    }
+                } else {
+                    containerAcompanhantes.style.display = 'none';
+                    listaAcompanhantes.innerHTML = '';
+                }
             } else {
                 camposConfirmacao.style.display = 'none';
+                containerAcompanhantes.style.display = 'none';
             }
         }
 
-        // Adiciona o listener para cada radio button
-        statusRadios.forEach(radio =>{
-            radio.addEventListener('change', toggleCampos);
-            
-            
-        });
-
-        // Chama a função no carregamento da página para definir o estado inicial
-        toggleCampos();
+        statusRadios.forEach(radio => radio.addEventListener('change', atualizarUI));
+        totalPessoasInput.addEventListener('input', atualizarUI);
+        
+        // Chamada inicial para organizar a tela em caso de edição ou recarregamento
+        atualizarUI();
     });
 </script>
 {% endblock %}

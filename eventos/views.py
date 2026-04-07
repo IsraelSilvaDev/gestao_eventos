@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
-from .models import Evento
+from .models import Evento, Convite, Resposta
 from .forms import CodigoAcessoForm, RespostaForm, EventoForm
 #
 # --- Views Públicas (para Convidados) ---
@@ -16,10 +16,9 @@ def home_view(request):
         if form.is_valid():
             codigo = form.cleaned_data['codigo'].upper()
             try:
-                evento = Evento.objects.get(codigo_acesso=codigo)
-                # Redireciona para o formulário de resposta desse evento
-                return redirect('responder_evento', codigo_acesso=evento.codigo_acesso)
-            except Evento.DoesNotExist:
+                convite = Convite.objects.get(codigo_acesso=codigo)
+                return redirect('responder_evento', codigo_acesso=convite.codigo_acesso)
+            except Convite.DoesNotExist:
                 messages.error(request, 'Código de acesso inválido. Tente novamente.')
     else:
         form = CodigoAcessoForm()
@@ -28,15 +27,15 @@ def home_view(request):
 
 def responder_evento_view(request, codigo_acesso):
     """Página do formulário de RSVP para um evento específico."""
-    evento = get_object_or_404(Evento, codigo_acesso=codigo_acesso)
+    convite = get_object_or_404(Convite, codigo_acesso=codigo_acesso)
+    evento = convite.evento
 
     if request.method == 'POST':
         form = RespostaForm(request.POST)
         if form.is_valid():
             response = form.save(False)
-            response.evento = evento
+            response.convite = convite
             response.save()
-            # Redireciona para a página de sucesso
             return redirect('sucesso')
     else:
         form = RespostaForm()
@@ -71,23 +70,16 @@ def dashboard_view(request):
 def detalhe_evento_dashboard_view(request, evento_id):
     """Página de detalhes do evento, com a lista de respostas e resumo."""
 
-    # Garante que o usuário só possa ver eventos que ele criou
     evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
 
-    # Busca todas as respostas do evento
-    respostas = evento.respostas.all().order_by('-data_resposta')
+    convites = evento.convites.all()
+    respostas = Resposta.objects.filter(convite__in=convites).order_by('-data_resposta')
 
-    # --- Cálculos do Resumo ---
-
-    # Total de Pessoas Confirmadas (Soma do campo 'total_pessoas' de quem confirmou)
     soma_pessoas_confirmadas = respostas.filter(status='confirmado').aggregate(
         total=Coalesce(Sum('total_pessoas'), 0)
     )['total']
 
-    # Total de Respostas "Confirmado"
     total_confirmados = respostas.filter(status='confirmado').count()
-
-    # Total de Respostas "Declinado"
     total_declinados = respostas.filter(status='declinado').count()
 
     resumo = {

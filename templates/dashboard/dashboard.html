@@ -31,7 +31,7 @@
                         <tr>
                             <td><strong>{{ evento.nome }}</strong></td>
                             <td>{{ evento.data|date:"d/m/Y H:i" }}</td>
-                            <td><span class="badge bg-secondary">{{ evento.codigo_acesso }}</span></td>
+                        <!-- <td><span class="badge bg-secondary">{{ evento.codigo_acesso }}</span></td> 
                             <td>
                                 <a href="{% url 'detalhe_evento' evento.id %}" class="btn btn-outline-primary btn-sm">Ver Respostas</a>
                                 <a href="{% url 'editar_evento' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar</a>
