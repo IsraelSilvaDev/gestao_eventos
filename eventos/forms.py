@@ -1,5 +1,5 @@
 from django import forms
-from .models import Resposta, Evento
+from .models import Resposta, Evento, Convite
 
 class CodigoAcessoForm(forms.Form):
     """Formulário para o convidado inserir o código do evento."""
@@ -53,7 +53,7 @@ class RespostaForm(forms.ModelForm):
         return cleaned_data
     
 class EventoForm(forms.ModelForm):
-       
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
       
@@ -67,10 +67,50 @@ class EventoForm(forms.ModelForm):
     class Meta:
         model = Evento
         
-        fields = ['nome', 'data', 'local', 'descricao']
-                
+        fields = ['nome', 'data', 'local', 'descricao', 'banner']
+        labels = {
+            'banner': 'Banner do Evento (imagem promocional)',
+        }
         widgets = {
             'data': forms.DateTimeInput(
                 attrs={'type': 'datetime-local', 'class': 'form-control'}
             ),
+            'banner': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
+
+class ConviteForm(forms.ModelForm):
+    class Meta:
+        model = Convite
+        fields = ['nome_destinatario']
+        labels = {
+            'nome_destinatario': 'Nome do Destinatário (opcional)',
+        }
+        widgets = {
+            'nome_destinatario': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: Família Silva'
+            }),
+        }
+
+class ConviteMultiploForm(forms.Form):
+    quantidade = forms.IntegerField(
+        label="Quantidade de convites",
+        min_value=1,
+        max_value=50,
+        initial=1,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': '1',
+            'max': '50'
+        })
+    )
+    nome_base = forms.CharField(
+        label="Nome base (opcional)",
+        required=False,
+        max_length=100,
+        help_text=" será adicionado um número sequencial",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Convite'
+        })
+    )

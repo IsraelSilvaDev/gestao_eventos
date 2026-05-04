@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Estatísticas de Convites{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="my-4">📊 Estatísticas de Convites</h1>
+
+    {% widthratio convites_respondidos 100 total_convites as taxa_resposta %}
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Convites</h5>
+                    <h2>{{ total_convites }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Convites Respondidos</h5>
+                    <h2>{{ convites_respondidos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Pendentes de Resposta</h5>
+                    <h2>{{ convites_pendentes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">Taxa de Resposta</h5>
+                    <h2>{% if total_convites > 0 %}{{ taxa_resposta }}%{% else %}0%{% endif %}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">✅ Confirmados (Sim)</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-success">{{ confirmados }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">❌ Recusados (Não)</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-danger">{{ declinados }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mt-4">Por Evento</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Evento</th>
+                    <th>Total Convites</th>
+                    <th>Respondidos</th>
+                    <th>Pendentes</th>
+                    <th>Confirmados</th>
+                    <th>Recusados</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evento in eventos %}
+                <tr>
+                    <td>{{ evento.nome }}</td>
+                    <td>{{ evento.total_convites }}</td>
+                    <td>{{ evento.convites_respondidos }}</td>
+                    <td>{{ evento.convites_pendentes }}</td>
+                    <td><span class="badge bg-success">{{ evento.total_confirmados }}</span></td>
+                    <td><span class="badge bg-danger">{{ evento.total_declinados }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Nenhum evento encontrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

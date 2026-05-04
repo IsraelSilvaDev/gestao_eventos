@@ -3,50 +3,484 @@
 {% block title %}Dashboard do Organizador{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h2">Seus Eventos</h1>
-    <a href="{% url 'criar_evento' %}" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill me-1" viewBox="0 0 16 16">
-            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"/>
-        </svg>
-        Criar Novo Evento
-    </a>
-</div>
+<div class="dashboard-container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Dashboard</h1>
+        </div>
+    </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        {% if eventos %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Nome do Evento</th>
-                            <th scope="col">Data</th>
-                            <th scope="col">Código de Acesso</th>
-                            <th scope="col">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for evento in eventos %}
-                        <tr>
-                            <td><strong>{{ evento.nome }}</strong></td>
-                            <td>{{ evento.data|date:"d/m/Y H:i" }}</td>
-                        <!-- <td><span class="badge bg-secondary">{{ evento.codigo_acesso }}</span></td> 
-                            <td>
-                                <a href="{% url 'detalhe_evento' evento.id %}" class="btn btn-outline-primary btn-sm">Ver Respostas</a>
-                                <a href="{% url 'editar_evento' evento.id %}" class="btn btn-outline-secondary btn-sm">Editar</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon">
+                    <i class="bi bi-envelope-paper"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Convites</span>
+                    <span class="stat-value" id="totalConvites">{{ total_convites|default:0 }}</span>
+                </div>
             </div>
-        {% else %}
-            <div class="text-center p-4">
-                <p class="lead">Você ainda não criou nenhum evento.</p>
-                <a href="{% url 'admin:eventos_evento_add' %}" class="btn btn-primary">Criar seu primeiro evento</a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Respondidos</span>
+                    <span class="stat-value" id="convitesRespondidos">{{ convites_respondidos|default:0 }}</span>
+                </div>
             </div>
-        {% endif %}
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Pendentes</span>
+                    <span class="stat-value" id="convitesPendentes">{{ convites_pendentes|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card stat-card-info">
+                <div class="stat-icon">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Taxa Resposta</span>
+                    <span class="stat-value" id="taxaResposta">{{ taxa_resposta|default:0 }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="chart-card">
+                <h5 class="chart-title">Status das Respostas</h5>
+                <div class="chart-container">
+                    <canvas id="respostaChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="chart-card">
+                <h5 class="chart-title">Convites por Evento</h5>
+                <div class="chart-container">
+                    <canvas id="eventosChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="mb-0">Seus Eventos</h5>
+                    <button class="btn btn-primary btn-sm" onclick="location.href='{% url 'criar_evento' %}'">
+                        <i class="bi bi-plus-circle me-1"></i> Novo Evento
+                    </button>
+                </div>
+                <div class="dashboard-card-body">
+                    {% if eventos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="eventosTable">
+                            <thead>
+                                <tr>
+                                    <th>Evento</th>
+                                    <th>Data</th>
+                                    <th>Convites</th>
+                                    <th>Confirmados</th>
+                                    <th>Recusados</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evento in eventos %}
+                                <tr class="event-row" data-evento-id="{{ evento.id }}">
+                                    <td><strong>{{ evento.nome }}</strong></td>
+                                    <td>{{ evento.data|date:"d/m/Y H:i" }}</td>
+                                    <td><span class="badge bg-primary">{{ evento.total_convites }}</span></td>
+                                    <td><span class="badge bg-success">{{ evento.confirmados }}</span></td>
+                                    <td><span class="badge bg-danger">{{ evento.declinados }}</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-action" onclick="location.href='{% url 'detalhe_evento' evento.id %}'" title="Ver Respostas">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-action" onclick="location.href='{% url 'editar_evento' evento.id %}'" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-action" onclick="copyLink('{{ evento.codigo }}')" title="Copiar Link">
+                                                <i class="bi bi-link-45deg"></i>
+                                            </button>
+                                            <button class="btn btn-success btn-action" onclick="sendWhatsappDashboard('{{ evento.codigo }}', '{{ evento.nome|escapejs }}')" title="Enviar por WhatsApp">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-event"></i>
+                        <p>Você ainda não criou nenhum evento.</p>
+                        <button class="btn btn-primary" onclick="location.href='{% url 'criar_evento' %}'">Criar primeiro evento</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initDashboard();
+});
+
+function initDashboard() {
+    initCharts();
+    initEventListeners();
+}
+
+function initCharts() {
+    const confirmados = {{ confirmados|default:0 }};
+    const declinados = {{ declinados|default:0 }};
+    const pendentes = {{ convites_pendentes|default:0 }};
+
+    const respostaCtx = document.getElementById('respostaChart').getContext('2d');
+    new Chart(respostaCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Confirmados', 'Recusados', 'Pendentes'],
+            datasets: [{
+                data: [confirmados, declinados, pendentes],
+                backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    const eventosData = [
+        {% for evento in eventos %}
+        {
+            nome: '{{ evento.nome|escapejs }}',
+            convites: {{ evento.convites.count }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    if (eventosData.length > 0) {
+        const eventosCtx = document.getElementById('eventosChart').getContext('2d');
+        new Chart(eventosCtx, {
+            type: 'bar',
+            data: {
+                labels: eventosData.map(e => e.nome),
+                datasets: [{
+                    label: 'Convites',
+                    data: eventosData.map(e => e.convites),
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initEventListeners() {
+    const eventRows = document.querySelectorAll('.event-row');
+    eventRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-group')) {
+                const link = this.querySelector('.btn-outline-primary');
+                if (link) link.click();
+            }
+        });
+    });
+}
+
+function copyLink(codigo) {
+    if (!codigo) {
+        showToast('Código não disponível', 'error');
+        return;
+    }
+    const url = window.location.origin + '/evento/' + codigo + '/';
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copiado!', 'success');
+    }).catch(() => {
+        showToast('Erro ao copiar', 'error');
+    });
+}
+
+function sendWhatsappDashboard(codigo, nomeEvento) {
+    if (!codigo) {
+        showToast('Código não disponível', 'error');
+        return;
+    }
+    const url = window.location.origin + '/evento/' + codigo + '/';
+    const mensagem = `Olá! Você está convidado para o evento "${nomeEvento}". Acesse o link para confirmar sua presença: ${url}`;
+    const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(mensagem);
+    window.open(whatsappUrl, '_blank');
+}
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+
+<style>
+.dashboard-container {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.stat-card-primary { border-left: 4px solid #0d6efd; }
+.stat-card-success { border-left: 4px solid #28a745; }
+.stat-card-warning { border-left: 4px solid #ffc107; }
+.stat-card-info { border-left: 4px solid #6c757d; }
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-card-primary .stat-icon { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+.stat-card-success .stat-icon { background: rgba(40, 167, 69, 0.1); color: #28a745; }
+.stat-card-warning .stat-icon { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
+.stat-card-info .stat-icon { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    height: 100%;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.chart-container {
+    height: 250px;
+    position: relative;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-card-body {
+    padding: 0;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #495057;
+    background: #f8f9fa;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.event-row {
+    cursor: pointer;
+}
+
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #adb5bd;
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+}
+
+.toast-item {
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast-item.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success { border-left: 4px solid #28a745; }
+.toast-success i { color: #28a745; }
+
+.toast-error { border-left: 4px solid #dc3545; }
+.toast-error i { color: #dc3545; }
+
+@media (max-width: 768px) {
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.2rem 0.4rem;
+    }
+}
+</style>
 {% endblock %}

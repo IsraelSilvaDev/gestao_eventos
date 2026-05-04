@@ -14,9 +14,16 @@ urlpatterns = [
 
     # URLs do Dashboard (Organizador)
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('dashboard/estatisticas/', views.estatisticas_dashboard_view, name='estatisticas'),
     path('dashboard/evento/<int:evento_id>/', views.detalhe_evento_dashboard_view, name='detalhe_evento'),
 
     # URLS  Criar Evento
     path('dashboard/criar/', views.criar_evento_view, name='criar_evento'),
     path('dashboard/evento/<int:evento_id>/editar/', views.editar_evento_view, name='editar_evento'),
+    
+    # URLs de Convites
+    path('dashboard/evento/<int:evento_id>/convites/', views.gerenciar_convites_view, name='gerenciar_convites'),
+    path('dashboard/evento/<int:evento_id>/convites/criar/', views.criar_convites_multiplos_view, name='criar_convites_multiplos'),
+    path('dashboard/convite/<int:convite_id>/excluir/', views.excluir_convite_view, name='excluir_convite'),
+    path('dashboard/convite/<int:convite_id>/link/', views.gerar_link_convite_view, name='gerar_link_convite'),
 ]

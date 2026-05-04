@@ -11,6 +11,7 @@ class Evento(models.Model):
     data = models.DateTimeField(verbose_name="Data e Hora")
     local = models.CharField(max_length=300, verbose_name="Local")
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição")
+    banner = models.ImageField(upload_to='banners/%Y/%m/', blank=True, null=True, verbose_name="Banner do Evento")
     # O campo codigo_acesso foi removido daqui!
 
     def __str__(self):

@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Convites - {{ evento.nome }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">Convites - {{ evento.nome }}</h1>
+            <p class="text-muted mb-0">Gerencie os convites deste evento</p>
+        </div>
+        <div>
+            <a href="{% url 'detalhe_evento' evento.id %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#criarConviteModal">
+                <i class="bi bi-plus-circle"></i> Novo Convite
+            </button>
+            <a href="{% url 'criar_convites_multiplos' evento.id %}" class="btn btn-success ms-2">
+                <i class="bi bi-plus-square"></i> Múltiplos
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-content">
+                    <span class="stat-label">Total de Convites</span>
+                    <span class="stat-value">{{ convites|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-success">
+                <div class="stat-content">
+                    <span class="stat-label">Respondidos</span>
+                    <span class="stat-value">{{ convites|length|add:'-'|add:convites_pendentes }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-content">
+                    <span class="stat-label">Pendentes</span>
+                    <span class="stat-value">{{ convites_pendentes }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="dashboard-card-body">
+            {% if convites %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="convitesTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Destinatário</th>
+                            <th>Status</th>
+                            <th>Resposta</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for convite in convites %}
+                        <tr>
+                            <td>
+                                <code class="codigo-convite">{{ convite.codigo_acesso }}</code>
+                                <button class="btn btn-sm btn-link copy-btn" onclick="copyToClipboard('{{ convite.codigo_acesso }}')" title="Copiar código">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </td>
+                            <td>{{ convite.nome_destinatario|default:"-" }}</td>
+                            <td>
+                                {% if convite.resposta %}
+                                <span class="badge bg-success">Respondido</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if convite.resposta %}
+                                <span class="badge {% if convite.resposta.status == 'confirmado' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ convite.resposta.get_status_display }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary btn-action" onclick="copyLink('{{ convite.codigo_acesso }}')" title="Copiar Link">
+                                        <i class="bi bi-link-45deg"></i>
+                                    </button>
+                                    <button class="btn btn-success btn-action" onclick="sendWhatsapp('{{ convite.codigo_acesso }}', '{{ evento.nome|escapejs }}')" title="Enviar por WhatsApp">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </button>
+                                    <a href="{% url 'responder_evento' convite.codigo_acesso %}" class="btn btn-outline-info btn-action" title="Ver Página" target="_blank">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger btn-action" onclick="confirmDelete({{ convite.id }})" title="Excluir">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-envelope"></i>
+                <p>Nenhum convite criado ainda.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#criarConviteModal">
+                    Criar primeiro convite
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="criarConviteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Criar Novo Convite</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ form.as_p }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Convite</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este convite? Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="#" id="deleteLink" class="btn btn-danger">Excluir</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyToClipboard(codigo) {
+    navigator.clipboard.writeText(codigo).then(() => {
+        showToast('Código copiado!', 'success');
+    });
+}
+
+function copyLink(codigo) {
+    const url = window.location.origin + '/evento/' + codigo + '/';
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copiado!', 'success');
+    }).catch(() => {
+        showToast('Erro ao copiar', 'error');
+    });
+}
+
+function sendWhatsapp(codigo, nomeEvento) {
+    const url = window.location.origin + '/evento/' + codigo + '/';
+    const mensagem = `Olá! Você está convidado para o evento "${nomeEvento}". Acesse o link para confirmar sua presença: ${url}`;
+    const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(mensagem);
+    window.open(whatsappUrl, '_blank');
+}
+
+function confirmDelete(conviteId) {
+    const link = document.getElementById('deleteLink');
+    link.href = '/dashboard/convite/' + conviteId + '/excluir/';
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-card-primary { border-left: 4px solid #0d6efd; }
+.stat-card-success { border-left: 4px solid #28a745; }
+.stat-card-warning { border-left: 4px solid #ffc107; }
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.codigo-convite {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.copy-btn {
+    padding: 0;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.copy-btn:hover {
+    color: #0d6efd;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.dashboard-card-body {
+    padding: 0;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #495057;
+    background: #f8f9fa;
+}
+
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #adb5bd;
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+}
+
+.toast-item {
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast-item.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success { border-left: 4px solid #28a745; }
+.toast-success i { color: #28a745; }
+
+.toast-error { border-left: 4px solid #dc3545; }
+.toast-error i { color: #dc3545; }
+</style>
+{% endblock %}

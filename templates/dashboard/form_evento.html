@@ -21,10 +21,31 @@
                 {% endif %}
             </h2>
 
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 
-                {{ form.as_p }}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {% if field.name == 'banner' %}
+                        {% if form.instance.banner %}
+                        <div class="mb-2">
+                            <img src="/media/{{ form.instance.banner }}" alt="Banner atual" class="img-thumbnail" style="max-height: 200px;">
+                            <p class="text-muted small mt-1">Banner atual. Envie uma nova imagem para substituir.</p>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" accept="image/*">
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors.0 }}</div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
 
                 <div class="d-grid gap-2 mt-4">
                     <button type="submit" class="btn btn-primary btn-lg">

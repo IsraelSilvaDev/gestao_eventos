@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
-from .models import Evento, Convite, Resposta
-from .forms import CodigoAcessoForm, RespostaForm, EventoForm
+from django.http import JsonResponse
+from .models import Evento, Convite, Resposta, Acompanhante
+from .forms import CodigoAcessoForm, RespostaForm, EventoForm, ConviteForm, ConviteMultiploForm
 #
 # --- Views Públicas (para Convidados) ---
 
@@ -31,18 +32,65 @@ def responder_evento_view(request, codigo_acesso):
     evento = convite.evento
 
     if request.method == 'POST':
-        form = RespostaForm(request.POST)
-        if form.is_valid():
-            response = form.save(False)
-            response.convite = convite
-            response.save()
-            return redirect('sucesso')
+        if 'desmarcar' in request.POST:
+            if hasattr(convite, 'resposta'):
+                resposta = convite.resposta
+                resposta.acompanhantes.all().delete()
+                resposta.delete()
+                messages.success(request, 'Sua confirmação foi desmarcada. Você pode confirmar novamente quando desejar.')
+            return redirect('responder_evento', codigo_acesso=codigo_acesso)
+        
+        if hasattr(convite, 'resposta'):
+            resposta = convite.resposta
+            form = RespostaForm(request.POST, instance=resposta)
+            if form.is_valid():
+                response = form.save()
+                response.acompanhantes.all().delete()
+                
+                nomes = request.POST.getlist('acompanhante_nome[]')
+                documentos = request.POST.getlist('acompanhante_doc[]')
+                for nome, doc in zip(nomes, documentos):
+                    if nome.strip():
+                        Acompanhante.objects.create(
+                            resposta=response,
+                            nome_completo=nome,
+                            documento=doc
+                        )
+                messages.success(request, 'Sua resposta foi atualizada com sucesso!')
+                return redirect('sucesso')
+        else:
+            form = RespostaForm(request.POST)
+            if form.is_valid():
+                response = form.save(False)
+                response.convite = convite
+                response.save()
+                
+                nomes = request.POST.getlist('acompanhante_nome[]')
+                documentos = request.POST.getlist('acompanhante_doc[]')
+                for nome, doc in zip(nomes, documentos):
+                    if nome.strip():
+                        Acompanhante.objects.create(
+                            resposta=response,
+                            nome_completo=nome,
+                            documento=doc
+                        )
+                return redirect('sucesso')
     else:
-        form = RespostaForm()
+        if hasattr(convite, 'resposta'):
+            resposta = convite.resposta
+            form = RespostaForm(instance=resposta)
+            acompanhantes = resposta.acompanhantes.all()
+            ja_respondeu = True
+        else:
+            form = RespostaForm()
+            acompanhantes = []
+            ja_respondeu = False
 
     context = {
         'form': form,
-        'evento': evento
+        'evento': evento,
+        'acompanhantes': acompanhantes,
+        'ja_respondeu': ja_respondeu
     }
     return render(request, 'responder_evento.html', context)
 
@@ -61,9 +109,81 @@ def is_organizador(user):
 @user_passes_test(is_organizador)
 def dashboard_view(request):
     """Página principal do dashboard do organizador."""
-    # Lista apenas os eventos criados pelo usuário logado
     eventos = Evento.objects.filter(organizador=request.user).order_by('-data')
-    return render(request, 'dashboard/dashboard.html', {'eventos': eventos})
+    
+    total_convites = Convite.objects.count()
+    convites_respondidos = Convite.objects.filter(resposta__isnull=False).count()
+    convites_pendentes = Convite.objects.filter(resposta__isnull=True).count()
+    
+    confirmados = Resposta.objects.filter(status='confirmado').count()
+    declinados = Resposta.objects.filter(status='declinado').count()
+    
+    taxa_resposta = 0
+    if total_convites > 0:
+        taxa_resposta = round((convites_respondidos / total_convites) * 100, 1)
+    
+    eventos_lista = []
+    for evento in eventos:
+        convites = evento.convites.all()
+        confirmados_evento = convites.filter(resposta__status='confirmado').count()
+        declinados_evento = convites.filter(resposta__status='declinado').count()
+        eventos_lista.append({
+            'id': evento.id,
+            'nome': evento.nome,
+            'data': evento.data,
+            'total_convites': convites.count(),
+            'confirmados': confirmados_evento,
+            'declinados': declinados_evento,
+            'codigo': convites.first().codigo_acesso if convites.exists() else ''
+        })
+    
+    context = {
+        'eventos': eventos_lista,
+        'total_convites': total_convites,
+        'convites_respondidos': convites_respondidos,
+        'convites_pendentes': convites_pendentes,
+        'confirmados': confirmados,
+        'declinados': declinados,
+        'taxa_resposta': taxa_resposta,
+    }
+    return render(request, 'dashboard/dashboard.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def estatisticas_dashboard_view(request):
+    """Painel de estatísticas de convites."""
+    total_convites = Convite.objects.count()
+    convites_respondidos = Convite.objects.filter(resposta__isnull=False).count()
+    convites_pendentes = Convite.objects.filter(resposta__isnull=True).count()
+    
+    confirmados = Resposta.objects.filter(status='confirmado').count()
+    declinados = Resposta.objects.filter(status='declinado').count()
+
+    eventos = Evento.objects.filter(organizador=request.user)
+    eventos_com_estatisticas = []
+    for evento in eventos:
+        total = evento.convites.count()
+        respondidos = evento.convites.filter(resposta__isnull=False).count()
+        confirmados_evento = evento.convites.filter(resposta__status='confirmado').count()
+        declinados_evento = evento.convites.filter(resposta__status='declinado').count()
+        eventos_com_estatisticas.append({
+            'nome': evento.nome,
+            'total_convites': total,
+            'convites_respondidos': respondidos,
+            'convites_pendentes': total - respondidos,
+            'total_confirmados': confirmados_evento,
+            'total_declinados': declinados_evento,
+        })
+
+    context = {
+        'total_convites': total_convites,
+        'convites_respondidos': convites_respondidos,
+        'convites_pendentes': convites_pendentes,
+        'confirmados': confirmados,
+        'declinados': declinados,
+        'eventos': eventos_com_estatisticas,
+    }
+    return render(request, 'dashboard/estatisticas.html', context)
 
 @login_required(login_url='login')
 @user_passes_test(is_organizador)
@@ -98,7 +218,7 @@ def detalhe_evento_dashboard_view(request, evento_id):
 @user_passes_test(is_organizador)
 def criar_evento_view(request):
     if request.method == 'POST':
-        form = EventoForm(request.POST)
+        form = EventoForm(request.POST, request.FILES)
 
         if form.is_valid():
             evento = form.save(commit=False)
@@ -112,18 +232,18 @@ def criar_evento_view(request):
     else:
         form = EventoForm()
 
-        context = {
-            'form': form,
-            'titulo_pagina':'Criar Novo Evento'
-        }
-        return render(request, 'dashboard/form_evento.html', context)
+    context = {
+        'form': form,
+        'titulo_pagina':'Criar Novo Evento'
+    }
+    return render(request, 'dashboard/form_evento.html', context)
 
 @login_required(login_url='login')
 @user_passes_test(is_organizador)
 def editar_evento_view(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
     if request.method == 'POST':
-        form = EventoForm(request.POST, instance=evento)
+        form = EventoForm(request.POST, request.FILES, instance=evento)
         if form.is_valid():
             form.save()
             messages.success(request, f'O evento "{evento.nome}" foi atualizado com sucesso!')
@@ -135,3 +255,79 @@ def editar_evento_view(request, evento_id):
     }
 
     return render(request, 'dashboard/form_evento.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def gerenciar_convites_view(request, evento_id):
+    """Página para gerenciar convites de um evento."""
+    evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
+    convites = evento.convites.all()
+    convites_pendentes = convites.filter(resposta__isnull=True).count()
+    
+    if request.method == 'POST':
+        form = ConviteForm(request.POST)
+        if form.is_valid():
+            convite = form.save(commit=False)
+            convite.evento = evento
+            convite.save()
+            messages.success(request, 'Convite criado com sucesso!')
+            return redirect('gerenciar_convites', evento_id=evento.id)
+    else:
+        form = ConviteForm()
+    
+    context = {
+        'evento': evento,
+        'convites': convites,
+        'convites_pendentes': convites_pendentes,
+        'form': form,
+    }
+    return render(request, 'dashboard/gerenciar_convites.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def criar_convites_multiplos_view(request, evento_id):
+    """Criar múltiplos convites de uma vez."""
+    evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
+    
+    if request.method == 'POST':
+        form = ConviteMultiploForm(request.POST)
+        if form.is_valid():
+            quantidade = form.cleaned_data['quantidade']
+            nome_base = form.cleaned_data['nome_base'] or 'Convite'
+            
+            convites_criados = []
+            for i in range(quantidade):
+                nome_dest = f"{nome_base} {i+1}" if quantidade > 1 else nome_base
+                convite = Convite.objects.create(
+                    evento=evento,
+                    nome_destinatario=nome_dest
+                )
+                convites_criados.append(convite)
+            
+            messages.success(request, f'{quantidade} convites criados com sucesso!')
+            return redirect('gerenciar_convites', evento_id=evento.id)
+    else:
+        form = ConviteMultiploForm()
+    
+    context = {
+        'evento': evento,
+        'form': form,
+    }
+    return render(request, 'dashboard/criar_convites_multiplos.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def excluir_convite_view(request, convite_id):
+    """Excluir um convite."""
+    convite = get_object_or_404(Convite, id=convite_id, evento__organizador=request.user)
+    evento_id = convite.evento.id
+    convite.delete()
+    messages.success(request, 'Convite excluído com sucesso!')
+    return redirect('gerenciar_convites', evento_id=evento_id)
+
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def gerar_link_convite_view(request, convite_id):
+    """Gerar link de convite para copiar."""
+    convite = get_object_or_404(Convite, id=convite_id, evento__organizador=request.user)
+    return JsonResponse({'link': request.build_absolute_uri(f'/evento/{convite.codigo_acesso}/')})

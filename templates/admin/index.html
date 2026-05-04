@@ -1,0 +1,22 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+{{ block.super }}
+
+{% if show_estatisticas_link %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📊 Estatísticas de Convites</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Visualize o painel de estatísticas com informações sobre convites enviados, respondidos e pendentes.</p>
+                <a href="{% url 'admin:estatisticas' %}" class="btn btn-primary">Ver Estatísticas</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

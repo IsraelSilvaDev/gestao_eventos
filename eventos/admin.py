@@ -1,23 +1,25 @@
 from django.contrib import admin
 from .models import Evento, Resposta, Convite, Acompanhante
 
-# Facilidade para gerar VÁRIOS códigos (convites) dentro do próprio evento
+
 class ConviteInline(admin.TabularInline):
     model = Convite
-    extra = 3 # Quantos convites em branco vão aparecer de uma vez
+    extra = 3
     readonly_fields = ('codigo_acesso',)
+
 
 @admin.register(Evento)
 class EventoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'data', 'local', 'organizador')
     inlines = [ConviteInline]
-    # O código original mantido aqui de get_queryset, save_model, etc...
+
 
 class AcompanhanteInline(admin.TabularInline):
     model = Acompanhante
     extra = 0
     can_delete = False
     readonly_fields = ('nome_completo', 'documento')
+
 
 @admin.register(Resposta)
 class RespostaAdmin(admin.ModelAdmin):
@@ -27,3 +29,19 @@ class RespostaAdmin(admin.ModelAdmin):
     def get_evento(self, obj):
         return obj.convite.evento.nome
     get_evento.short_description = 'Evento'
+
+
+@admin.register(Convite)
+class ConviteAdmin(admin.ModelAdmin):
+    list_display = ('codigo_acesso', 'get_evento', 'nome_destinatario', 'get_status_resposta')
+    search_fields = ('codigo_acesso', 'nome_destinatario', 'evento__nome')
+
+    def get_evento(self, obj):
+        return obj.evento.nome
+    get_evento.short_description = 'Evento'
+
+    def get_status_resposta(self, obj):
+        if hasattr(obj, 'resposta'):
+            return obj.resposta.status
+        return 'Pendente'
+    get_status_resposta.short_description = 'Status'
