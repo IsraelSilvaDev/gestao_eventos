@@ -22,31 +22,41 @@
         </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-4 g-3">
         <div class="col-md-4">
-            <div class="stat-card stat-card-primary">
+            <div class="stat-card stat-card-info" onclick="filterTable('confirmado')" style="cursor: pointer;">
+                <div class="stat-icon">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
                 <div class="stat-content">
-                    <span class="stat-label">Total de Convites</span>
-                    <span class="stat-value">{{ convites|length }}</span>
+                    <span class="stat-label">Confirmados</span>
+                    <span class="stat-value">{{ confirmados_count }}</span>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card stat-card-success">
+            <div class="stat-card stat-card-success" onclick="filterTable('respondido')" style="cursor: pointer;">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
                 <div class="stat-content">
                     <span class="stat-label">Respondidos</span>
-                    <span class="stat-value">{{ convites|length|add:'-'|add:convites_pendentes }}</span>
+                    <span class="stat-value">{{ convites_respondidos }}</span>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card stat-card-warning">
+            <div class="stat-card stat-card-danger" onclick="filterTable('declinado')" style="cursor: pointer;">
+                <div class="stat-icon">
+                    <i class="bi bi-person-x-fill"></i>
+                </div>
                 <div class="stat-content">
-                    <span class="stat-label">Pendentes</span>
-                    <span class="stat-value">{{ convites_pendentes }}</span>
+                    <span class="stat-label">Declinados</span>
+                    <span class="stat-value">{{ declinados_count }}</span>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <div class="dashboard-card">
@@ -167,19 +177,37 @@
 
 {% block scripts %}
 <script>
-function copyToClipboard(codigo) {
-    navigator.clipboard.writeText(codigo).then(() => {
+function copyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const result = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (result) {
         showToast('Código copiado!', 'success');
-    });
+    } else {
+        showToast('Erro ao copiar código', 'error');
+    }
 }
 
 function copyLink(codigo) {
     const url = window.location.origin + '/evento/' + codigo + '/';
-    navigator.clipboard.writeText(url).then(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const result = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (result) {
         showToast('Link copiado!', 'success');
-    }).catch(() => {
-        showToast('Erro ao copiar', 'error');
-    });
+    } else {
+        showToast('Erro ao copiar link', 'error');
+    }
 }
 
 function sendWhatsapp(codigo, nomeEvento) {
@@ -211,6 +239,52 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+function filterTable(filter) {
+    const rows = document.querySelectorAll('#convitesTable tbody tr');
+    rows.forEach(row => {
+        const statusBadge = row.querySelector('.badge');
+        if (!statusBadge) return;
+        
+        let show = false;
+        if (filter === 'respondido' && statusBadge.classList.contains('bg-success')) {
+            show = true;
+        } else if (filter === 'confirmado') {
+            const respostaBadge = row.querySelectorAll('.badge')[1];
+            if (respostaBadge && respostaBadge.classList.contains('bg-success')) {
+                show = true;
+            }
+        } else if (filter === 'declinado') {
+            const respostaBadge = row.querySelectorAll('.badge')[1];
+            if (respostaBadge && respostaBadge.classList.contains('bg-danger')) {
+                show = true;
+            }
+        } else if (filter === 'all') {
+            show = true;
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+    
+    const filterText = {
+        'all': 'Todos os convites',
+        'respondido': 'Convites respondidos',
+        'confirmado': 'Convites confirmados',
+        'declinado': 'Convites declinados'
+    };
+    showToast(`Mostrando: ${filterText[filter]}`, 'success');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+});
 </script>
 
 <style>
@@ -222,11 +296,77 @@ function showToast(message, type = 'success') {
     align-items: center;
     gap: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.stat-card-primary { border-left: 4px solid #0d6efd; }
-.stat-card-success { border-left: 4px solid #28a745; }
-.stat-card-warning { border-left: 4px solid #ffc107; }
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.stat-card:active {
+    transform: scale(0.98);
+}
+
+.stat-card-primary { 
+    border-left: 4px solid #0d6efd;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+.stat-card-success { 
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fff4 100%);
+}
+.stat-card-warning { 
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, #ffffff 0%, #fff9e6 100%);
+}
+.stat-card-danger { 
+    border-left: 4px solid #dc3545;
+    background: linear-gradient(135deg, #ffffff 0%, #ffeaea 100%);
+}
+.stat-card-info { 
+    border-left: 4px solid #17a2b8;
+    background: linear-gradient(135deg, #ffffff 0%, #e6f7fa 100%);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.stat-card-primary .stat-icon { background: #e7f1ff; color: #0d6efd; }
+.stat-card-success .stat-icon { background: #d4edda; color: #28a745; }
+.stat-card-warning .stat-icon { background: #fff3cd; color: #ffc107; }
+.stat-card-danger .stat-icon { background: #f8d7da; color: #dc3545; }
+.stat-card-info .stat-icon { background: #d1ecf1; color: #17a2b8; }
 
 .stat-content {
     display: flex;

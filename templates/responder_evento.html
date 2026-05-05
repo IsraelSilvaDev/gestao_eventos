@@ -2,6 +2,11 @@
 {% block title %}Responder: {{ evento.nome }}{% endblock %}
 
 {% block content %}
+<div class="mb-2">
+    <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
 <div class="card card-container shadow-sm">
     <div class="card-body p-4 p-md-5">
         {% if evento.banner %}

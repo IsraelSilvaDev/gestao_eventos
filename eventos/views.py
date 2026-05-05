@@ -208,10 +208,13 @@ def detalhe_evento_dashboard_view(request, evento_id):
         'total_declinados': total_declinados,
     }
 
+    convites_pendentes = convites.filter(resposta__isnull=True).count()
+
     context = {
         'evento': evento,
         'respostas': respostas,
-        'resumo': resumo
+        'resumo': resumo,
+        'convites_pendentes': convites_pendentes
     }
     return render(request, 'dashboard/detalhe_evento.html', context)
 @login_required(login_url='login')
@@ -263,6 +266,9 @@ def gerenciar_convites_view(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
     convites = evento.convites.all()
     convites_pendentes = convites.filter(resposta__isnull=True).count()
+    convites_respondidos = convites.filter(resposta__isnull=False).count()
+    confirmados_count = convites.filter(resposta__status='confirmado').count()
+    declinados_count = convites.filter(resposta__status='declinado').count()
     
     if request.method == 'POST':
         form = ConviteForm(request.POST)
@@ -279,6 +285,9 @@ def gerenciar_convites_view(request, evento_id):
         'evento': evento,
         'convites': convites,
         'convites_pendentes': convites_pendentes,
+        'convites_respondidos': convites_respondidos,
+        'confirmados_count': confirmados_count,
+        'declinados_count': declinados_count,
         'form': form,
     }
     return render(request, 'dashboard/gerenciar_convites.html', context)

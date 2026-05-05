@@ -81,19 +81,27 @@
             <div class="dashboard-card">
                 <div class="dashboard-card-header">
                     <h5 class="mb-0">Seus Eventos</h5>
-                    <button class="btn btn-primary btn-sm" onclick="location.href='{% url 'criar_evento' %}'">
-                        <i class="bi bi-plus-circle me-1"></i> Novo Evento
-                    </button>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" id="searchEventos" placeholder="Buscar eventos..." style="width: 200px;">
+                        <select class="form-select form-select-sm" id="filterStatus" style="width: 150px;">
+                            <option value="all">Todos</option>
+                            <option value="confirmado">Com confirmados</option>
+                            <option value="pendente">Pendentes</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="location.href='{% url 'criar_evento' %}'">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Evento
+                        </button>
+                    </div>
                 </div>
                 <div class="dashboard-card-body">
                     {% if eventos %}
                     <div class="table-responsive">
-                        <table class="table table-hover" id="eventosTable">
+                        <table class="table table-hover" id="eventosTable" data-sort-column="data" data-sort-order="desc">
                             <thead>
                                 <tr>
-                                    <th>Evento</th>
-                                    <th>Data</th>
-                                    <th>Convites</th>
+                                    <th onclick="sortTable('nome')" style="cursor: pointer;">Evento <i class="bi bi-sort"></i></th>
+                                    <th onclick="sortTable('data')" style="cursor: pointer;">Data <i class="bi bi-sort"></i></th>
+                                    <th onclick="sortTable('convites')" style="cursor: pointer;">Convites <i class="bi bi-sort"></i></th>
                                     <th>Confirmados</th>
                                     <th>Recusados</th>
                                     <th>Ações</th>
@@ -157,52 +165,25 @@ function initDashboard() {
 }
 
 function initCharts() {
+    console.log('Initializing charts...');
+    
     const confirmados = {{ confirmados|default:0 }};
     const declinados = {{ declinados|default:0 }};
     const pendentes = {{ convites_pendentes|default:0 }};
+    console.log('Data:', {confirmados, declinados, pendentes});
 
-    const respostaCtx = document.getElementById('respostaChart').getContext('2d');
-    new Chart(respostaCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Confirmados', 'Recusados', 'Pendentes'],
-            datasets: [{
-                data: [confirmados, declinados, pendentes],
-                backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    const eventosData = [
-        {% for evento in eventos %}
-        {
-            nome: '{{ evento.nome|escapejs }}',
-            convites: {{ evento.convites.count }}
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    if (eventosData.length > 0) {
-        const eventosCtx = document.getElementById('eventosChart').getContext('2d');
-        new Chart(eventosCtx, {
-            type: 'bar',
+    const respostaCtx = document.getElementById('respostaChart');
+    console.log('respostaChart element:', respostaCtx);
+    if (respostaCtx) {
+        const respostaCtx2d = respostaCtx.getContext('2d');
+        new Chart(respostaCtx2d, {
+            type: 'doughnut',
             data: {
-                labels: eventosData.map(e => e.nome),
+                labels: ['Confirmados', 'Recusados', 'Pendentes'],
                 datasets: [{
-                    label: 'Convites',
-                    data: eventosData.map(e => e.convites),
-                    backgroundColor: '#0d6efd',
-                    borderRadius: 4
+                    data: [confirmados, declinados, pendentes],
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                    borderWidth: 0
                 }]
             },
             options: {
@@ -210,19 +191,58 @@ function initCharts() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
+                        position: 'bottom'
                     }
                 }
             }
         });
+    }
+
+    const eventosData = [
+        {% for evento in eventos %}
+        {
+            nome: '{{ evento.nome|escapejs }}',
+            convites: {{ evento.total_convites }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    console.log('Eventos data:', eventosData);
+
+    if (eventosData.length > 0) {
+        const eventosCtx = document.getElementById('eventosChart');
+        console.log('eventosChart element:', eventosCtx);
+        if (eventosCtx) {
+            const eventosCtx2d = eventosCtx.getContext('2d');
+            new Chart(eventosCtx2d, {
+                type: 'bar',
+                data: {
+                    labels: eventosData.map(e => e.nome),
+                    datasets: [{
+                        label: 'Convites',
+                        data: eventosData.map(e => e.convites),
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -235,7 +255,152 @@ function initEventListeners() {
                 if (link) link.click();
             }
         });
+        
+        row.addEventListener('mouseenter', function() {
+            this.classList.add('table-active');
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.classList.remove('table-active');
+        });
     });
+    
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', function() {
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 150);
+        });
+    });
+    
+    const searchInput = document.getElementById('searchEventos');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            filterEventos(e.target.value);
+        });
+    }
+    
+    const filterSelect = document.getElementById('filterStatus');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function(e) {
+            filterEventosByStatus(e.target.value);
+        });
+    }
+    
+    animateCards();
+}
+
+function filterEventos(searchTerm) {
+    const term = searchTerm.toLowerCase();
+    const rows = document.querySelectorAll('.event-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+}
+
+function filterEventosByStatus(status) {
+    const rows = document.querySelectorAll('.event-row');
+    
+    rows.forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+            return;
+        }
+        
+        const badges = row.querySelectorAll('.badge');
+        let show = false;
+        
+        badges.forEach(badge => {
+            if (badge.textContent.toLowerCase().includes(status)) {
+                show = true;
+            }
+        });
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function animateCards() {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+function sortTable(column) {
+    const table = document.getElementById('eventosTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    const isAsc = table.dataset.sortColumn === column;
+    table.dataset.sortColumn = column;
+    table.dataset.sortOrder = isAsc ? 'desc' : 'asc';
+    
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        if (column === 'nome') {
+            aVal = a.cells[0].textContent;
+            bVal = b.cells[0].textContent;
+        } else if (column === 'data') {
+            aVal = a.cells[1].textContent;
+            bVal = b.cells[1].textContent;
+        } else {
+            aVal = parseInt(a.cells[2].textContent) || 0;
+            bVal = parseInt(b.cells[2].textContent) || 0;
+        }
+        
+        if (column === 'data') {
+            const dateA = new Date(aVal.split('/').reverse().join('-'));
+            const dateB = new Date(bVal.split('/').reverse().join('-'));
+            return isAsc ? dateA - dateB : dateB - dateA;
+        }
+        
+        if (isAsc) {
+            return aVal > bVal ? 1 : -1;
+        }
+        return aVal < bVal ? 1 : -1;
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function showTooltip(element, message) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    tooltip.textContent = message;
+    tooltip.style.position = 'absolute';
+    tooltip.style.bottom = '100%';
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translateX(-50%)';
+    tooltip.style.padding = '0.5rem 1rem';
+    tooltip.style.background = '#333';
+    tooltip.style.color = 'white';
+    tooltip.style.borderRadius = '4px';
+    tooltip.style.fontSize = '0.875rem';
+    tooltip.style.zIndex = '1000';
+    tooltip.style.opacity = '0';
+    tooltip.style.transition = 'opacity 0.3s';
+    
+    element.style.position = 'relative';
+    element.appendChild(tooltip);
+    
+    setTimeout(() => tooltip.style.opacity = '1', 10);
+    
+    setTimeout(() => {
+        tooltip.style.opacity = '0';
+        setTimeout(() => tooltip.remove(), 300);
+    }, 2000);
 }
 
 function copyLink(codigo) {
@@ -244,11 +409,19 @@ function copyLink(codigo) {
         return;
     }
     const url = window.location.origin + '/evento/' + codigo + '/';
-    navigator.clipboard.writeText(url).then(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const result = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (result) {
         showToast('Link copiado!', 'success');
-    }).catch(() => {
-        showToast('Erro ao copiar', 'error');
-    });
+    } else {
+        showToast('Erro ao copiar link', 'error');
+    }
 }
 
 function sendWhatsappDashboard(codigo, nomeEvento) {
@@ -297,19 +470,57 @@ function showToast(message, type = 'success') {
     align-items: center;
     gap: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
 }
 
-.stat-card-primary { border-left: 4px solid #0d6efd; }
-.stat-card-success { border-left: 4px solid #28a745; }
-.stat-card-warning { border-left: 4px solid #ffc107; }
-.stat-card-info { border-left: 4px solid #6c757d; }
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.stat-card:active {
+    transform: scale(0.98);
+}
+
+.stat-card-primary { 
+    border-left: 4px solid #0d6efd;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+.stat-card-success { 
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fff4 100%);
+}
+.stat-card-warning { 
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, #ffffff 0%, #fff9e6 100%);
+}
+.stat-card-info { 
+    border-left: 4px solid #6c757d;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
 
 .stat-icon {
     width: 48px;
@@ -319,6 +530,7 @@ function showToast(message, type = 'success') {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
+    transition: transform 0.3s ease;
 }
 
 .stat-card-primary .stat-icon { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
