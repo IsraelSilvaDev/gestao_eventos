@@ -147,9 +147,9 @@ POST:
 
 ## Observações e Alertas 🟡 INFERIDO
 
-1. **`convites.first().codigo_acesso`** no dashboard_view: assume que o evento tem ao menos 1 convite. Se o evento for recém-criado sem convites, causará AttributeError.
+1. ~~**`convites.first().codigo_acesso`** no dashboard_view: assume que o evento tem ao menos 1 convite.~~ ✅ RESOLVIDO — guarda `if convites.exists()` em `views.py:138`
 2. **Sem testes**: tests.py está vazio (apenas placeholder).
-3. **Debug ativo**: `DEBUG = True` em settings.py — inseguro para produção.
-4. **Secret key hardcoded**: fallback em settings.py, mas .env tem a chave real.
+3. ~~**Debug ativo**: `DEBUG = True` em settings.py~~ ✅ RESOLVIDO — lido do `.env` via `python-decouple`
+4. ~~**Secret key hardcoded**: fallback em settings.py~~ ✅ RESOLVIDO — lida do `.env` via `python-decouple`, sem fallback
 5. **Logout via POST apenas**: correto por segurança, mas pode confundir usuários sem JavaScript.
 6. **Sem proteção contra brute force**: não há rate limiting na busca por código de acesso.

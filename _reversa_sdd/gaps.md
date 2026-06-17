@@ -8,7 +8,7 @@
 
 | Severidade | Quantidade | Descrição |
 |------------|-----------|-----------|
-| 🔴 Crítico | 2 | Podem causar exceção em produção ou bloquear reimplementação |
+| 🔴 Crítico | 1 | Podem causar exceção em produção ou bloquear reimplementação |
 | 🟡 Moderado | 4 | Impactam qualidade, mas não quebram funcionalidade principal |
 | 🔵 Cosmético | 2 | Melhorias menores, sem impacto em comportamento |
 
@@ -16,13 +16,12 @@
 
 ## 🔴 Crítico
 
-### G01 — AttributeError em dashboard se evento não tiver convites
+### ~~G01 — AttributeError em dashboard se evento não tiver convites~~ ✅ RESOLVIDO
 
-**Arquivo:** `eventos/views.py:137`
-**Spec:** `dashboard/design.md`
-**Problema:** `convites.first().codigo_acesso` sem guarda — se `convites` queryset for vazio, `.first()` retorna `None` e `.codigo_acesso` levanta `AttributeError`.
-**Correção sugerida:** Adicionar `if convites.exists()` antes de acessar o código.
-**Status:** ✅ Confirmado para correção
+**Arquivo:** `eventos/views.py:138`
+**Problema original:** `convites.first().codigo_acesso` sem guarda — causava `AttributeError` para eventos sem convites.
+**Solução aplicada:** Adicionado `if convites.exists()` antes de acessar o código.
+**Status:** ❌ FECHADO (corrigido em 17/06/2026)
 
 ### G02 — Sem rate limiting na página de login/home
 

@@ -35,6 +35,6 @@
 
 ## Riscos e Lacunas
 
-- 🔴 **`convites.first().codigo_acesso`**: BUG — se evento não tiver convites, causa AttributeError (`views.py:137`). Requer guarda `if convites.exists()`
+- ~~🔴 **`convites.first().codigo_acesso`**: BUG — se evento não tiver convites, causa AttributeError~~ ✅ RESOLVIDO — guarda `if convites.exists()` adicionada em `eventos/views.py:138`
 - 🟡 **Dados inline no HTML**: pode ficar pesado com dezenas de eventos
 - 🟡 **CDN externo**: sem internet = sem gráficos

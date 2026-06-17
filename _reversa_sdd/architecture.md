@@ -10,7 +10,7 @@ Sistema monolítico Django para gestão de eventos com foco em RSVP online. Arqu
 |--------|-----------|--------|
 | Backend | Django (Python) | 6.0.3 |
 | Frontend | Bootstrap 5 + Chart.js (CDN) | 5.3.3 / 4.4.1 |
-| Banco | SQLite (dev) / PostgreSQL (config .env) | — |
+| Banco | PostgreSQL | 16.14 |
 | Imagens | Pillow | 12.2.0 |
 | Deploy | PythonAnywhere | — |
 
@@ -54,13 +54,11 @@ C4Context
 2. **Server-Rendered**: sem API — adequado para o escopo atual, mas limita integrações
 3. **Single App**: toda lógica em `eventos/` — coeso mas sem separação de domínios
 4. **Staff como Organizador**: reuso do `is_staff` Django sem modelo de perfil extra
+5. **Config via `.env`**: settings.py usa `python-decouple` para ler variáveis de ambiente — PostgreSQL ativo, SECRET_KEY e DEBUG externalizados
 
 ## Dívidas Técnicas 🔴
 
-1. **`DEBUG = True`** em produção potencial — inseguro
-2. **Secret Key hardcoded** em settings.py — .env existe mas não é lido
-3. **SQLite configurado** mas .env tem PostgreSQL — config híbrida entre dev/prod
-4. **Zero testes** — tests.py vazio
-5. **Possível AttributeError** — `convites.first().codigo_acesso` sem checar existência
-6. **CDN dependencies** — sem fallback offline para Bootstrap/Chart.js
-7. **Dados sensíveis no .env** — .env.versionado (no git?)
+1. **`DEBUG=True` no `.env`** — verificar em produção
+2. **Zero testes** — tests.py vazio
+3. **CDN dependencies** — sem fallback offline para Bootstrap/Chart.js
+4. ~~**Dados sensíveis no `.env` versionado** — `.env` no git~~ ✅ `.env` está em `.gitignore` — não versionado

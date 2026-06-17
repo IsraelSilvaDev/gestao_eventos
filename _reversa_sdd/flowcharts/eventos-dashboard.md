@@ -38,4 +38,4 @@ flowchart TD
 
 ## Ponto de Atenção 🟡 INFERIDO
 
-`convites.first().codigo_acesso` na linha 137 — assume que o evento tem pelo menos 1 convite. Se o evento foi criado mas nenhum convite foi gerado, isso causará um `AttributeError: 'NoneType' object has no attribute 'codigo_acesso'`.
+~~`convites.first().codigo_acesso` na linha 137 — assume que o evento tem pelo menos 1 convite.~~ ✅ RESOLVIDO — guarda `if convites.exists()` em `views.py:138`

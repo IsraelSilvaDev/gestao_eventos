@@ -9,7 +9,7 @@ C4Container
 
     System_Boundary(sistema, "Gestão de Eventos") {
         Container(web, "Aplicação Web", "Django 6.0.3 + Python", "Processa requisições HTTP, renderiza templates gerencia dados")
-        Container(db, "Banco de Dados", "SQLite / PostgreSQL", "Armazena eventos, convites, respostas, acompanhantes e dados de autenticação")
+        Container(db, "Banco de Dados", "PostgreSQL 16", "Armazena eventos, convites, respostas, acompanhantes e dados de autenticação")
         Container(static, "Arquivos Estáticos", "staticfiles/", "CSS/JS coletados do admin Django")
         Container(media, "Arquivos de Mídia", "media/", "Banners de eventos enviados por organizadores")
     }
@@ -34,7 +34,7 @@ C4Container
 | Container | Tecnologia | Responsabilidade |
 |-----------|-----------|------------------|
 | **Web App** | Django 6.0.3 / Python | Processar requisições, autenticar, renderizar templates, servir formulários, gerar gráficos (dados inline) |
-| **Banco de Dados** | SQLite / PostgreSQL | Persistir dados de Evento, Convite, Resposta, Acompanhante, auth.User |
+| **Banco de Dados** | PostgreSQL 16 | Persistir dados de Evento, Convite, Resposta, Acompanhante, auth.User |
 | **Estáticos** | staticfiles/ | Arquivos coletados do admin Django |
 | **Mídia** | media/ | Banners de eventos (imagens) |
 

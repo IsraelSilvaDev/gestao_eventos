@@ -6,6 +6,8 @@
 |--------|--------|-----------|
 | Django | 6.0.3 | Framework web |
 | pillow | 12.2.0 | Processamento de imagens (banners) |
+| psycopg2-binary | 2.9.10 | Driver PostgreSQL |
+| python-decouple | 3.8 | Leitura de variáveis de ambiente via `.env` |
 | asgiref | 3.11.1 | Interface ASGI do Django |
 | sqlparse | 0.5.5 | Parser SQL (uso interno do Django) |
 
@@ -20,12 +22,12 @@
 ## Ambiente de Desenvolvimento
 
 - Python 3.x
-- SQLite (banco padrão)
+- PostgreSQL 16 (via `localhost:5432`)
 - Virtualenv (venv/) para isolamento
 
 ## Deploy
 
-O arquivo `.env` contém credenciais para PostgreSQL, mas o `settings.py` ainda usa SQLite por padrão.
+O `settings.py` lê as configurações do banco do arquivo `.env` via `python-decouple`. Em produção, basta configurar as variáveis `DB_*` no ambiente.
 Há suporte a deploy em PythonAnywhere documentado em `DEPLOY_PYTHONANYWHERE.md`.
 
 ## Scripts disponíveis (manage.py)

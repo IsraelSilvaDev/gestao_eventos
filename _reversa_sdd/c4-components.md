@@ -16,7 +16,7 @@ C4Component
         Component(templates, "Template Engine", "Django Templates", "13 templates Bootstrap 5")
     }
 
-    ContainerDb(db, "Banco de Dados", "SQLite/PostgreSQL")
+    ContainerDb(db, "Banco de Dados", "PostgreSQL")
 
     Rel(urls, views, "Roteia")
     Rel(urls, auth, "Roteia")

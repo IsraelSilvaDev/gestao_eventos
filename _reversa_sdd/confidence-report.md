@@ -50,7 +50,7 @@ Itens que permaneceram sem confirmação após a revisão:
   - Pergunta correspondente: review session
 
 ### dashboard
-- **BUG `convites.first().codigo_acesso`** — causa AttributeError se evento não tiver convites. (`dashboard/design.md:38, views.py:137`)
+- ~~**BUG `convites.first().codigo_acesso`** — causa AttributeError se evento não tiver convites.~~ ✅ RESOLVIDO
 - **Dados inline no HTML** — pode ficar pesado com dezenas de eventos. (`dashboard/design.md:39`)
 
 ### domain.md
@@ -64,7 +64,7 @@ Itens que permaneceram sem confirmação após a revisão:
 
 ## Recomendações
 
-- [ ] **dashboard**: Corrigir bug `convites.first().codigo_acesso` — adicionar guarda `if convites.exists()` (`views.py:137`)
+- [x] **dashboard**: Corrigir bug `convites.first().codigo_acesso` — guarda `if convites.exists()` adicionada (`eventos/views.py:138`)
 - [ ] **home/login**: Avaliar necessidade de rate limiting contra brute force
 - [ ] **Geral**: Implementar auditoria, validação de documento e proteção de dados conforme priorizado
 - [ ] **Geral**: Escrever testes para fluxos principais (RSVP, criação de evento, geração de convites)

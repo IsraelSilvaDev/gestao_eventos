@@ -7,7 +7,7 @@ flowchart LR
     A[Usuário] -->|HTTPS| B[PythonAnywhere Web App]
     B --> C[Gunicorn/WSGI]
     C --> D[Django App]
-    D --> E[(SQLite / PostgreSQL)]
+    D --> E[(PostgreSQL)]
     D --> F[/static/]
     D --> G[/media/]
     
@@ -36,14 +36,14 @@ DB_PORT=5432
 SECURE_SSL_REDIRECT=True
 ```
 
-**Nota**: O `settings.py` atualmente ignora as variáveis de ambiente e usa SQLite com `DEBUG=True`. A configuração do `.env` está pronta para PostgreSQL mas não está sendo lida pelo código.
+**Nota**: O `settings.py` lê as variáveis de ambiente via `python-decouple`. O PostgreSQL está ativo. `DEBUG` e `SECRET_KEY` são controlados pelo `.env`.
 
 ## Checklist de Deploy
 
 - [ ] Gerar SECRET_KEY segura e configurar em produção
 - [ ] Definir `DEBUG=False`
 - [ ] Configurar `ALLOWED_HOSTS` com domínio real
-- [ ] Migrar para PostgreSQL (ler config do .env)
+- [X] Migrar para PostgreSQL (ativo via .env)
 - [ ] Rodar `collectstatic`
 - [ ] Configurar servidor de media (ou usar S3)
 - [ ] Configurar HTTPS (PythonAnywhere faz isso automaticamente)

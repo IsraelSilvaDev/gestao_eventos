@@ -60,7 +60,9 @@ DEPLOY_PYTHONANYWHERE.md     # Guia de deploy
 | Python | 3.x | Linguagem principal |
 | Django | 6.0.3 | Framework web |
 | Pillow | 12.2.0 | Manipulação de imagens (banners) |
-| SQLite | — | Banco de dados (dev) |
+| psycopg2-binary | 2.9.10 | Driver PostgreSQL |
+| python-decouple | 3.8 | Leitura de `.env` |
+| PostgreSQL | 16.14 | Banco de dados (via `.env`) |
 | Bootstrap | 5.3.3 | Frontend (CDN) |
 | Chart.js | 4.4.1 | Gráficos no dashboard (CDN) |
 | Bootstrap Icons | 1.11.3 | Ícones (CDN) |
