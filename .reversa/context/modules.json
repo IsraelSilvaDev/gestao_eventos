@@ -1,0 +1,219 @@
+{
+  "generated_at": "2026-06-17T00:00:00Z",
+  "modules": [
+    {
+      "name": "eventos",
+      "path": "eventos/",
+      "purpose": "Gestão completa de eventos com criação de convites, RSVP online e dashboard administrativo",
+      "primary_files": [
+        "eventos/models.py",
+        "eventos/views.py",
+        "eventos/forms.py",
+        "eventos/urls.py",
+        "eventos/admin.py"
+      ],
+      "functions": [
+        {
+          "name": "home_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "responder_evento_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "codigo_acesso: str"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "sucesso_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "dashboard_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "estatisticas_dashboard_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "detalhe_evento_dashboard_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "evento_id: int"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "criar_evento_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "editar_evento_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "evento_id: int"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "gerenciar_convites_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "evento_id: int"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "criar_convites_multiplos_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "evento_id: int"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "excluir_convite_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "convite_id: int"],
+          "returns": "HttpResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "gerar_link_convite_view",
+          "file": "eventos/views.py",
+          "params": ["request: HttpRequest", "convite_id: int"],
+          "returns": "JsonResponse",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "is_organizador",
+          "file": "eventos/views.py",
+          "params": ["user: User"],
+          "returns": "bool",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "gerar_codigo_acesso",
+          "file": "eventos/models.py",
+          "params": [],
+          "returns": "str",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Evento",
+          "fields": [
+            { "name": "id", "type": "BigAutoField", "required": true },
+            { "name": "organizador", "type": "ForeignKey(User)", "required": true },
+            { "name": "nome", "type": "CharField(200)", "required": true },
+            { "name": "data", "type": "DateTimeField", "required": true },
+            { "name": "local", "type": "CharField(300)", "required": true },
+            { "name": "descricao", "type": "TextField", "required": false },
+            { "name": "banner", "type": "ImageField", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Convite",
+          "fields": [
+            { "name": "id", "type": "BigAutoField", "required": true },
+            { "name": "evento", "type": "ForeignKey(Evento)", "required": true },
+            { "name": "nome_destinatario", "type": "CharField(200)", "required": false },
+            { "name": "codigo_acesso", "type": "CharField(8)", "required": true, "unique": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Resposta",
+          "fields": [
+            { "name": "id", "type": "BigAutoField", "required": true },
+            { "name": "convite", "type": "OneToOneField(Convite)", "required": false },
+            { "name": "nome_principal", "type": "CharField(200)", "required": true },
+            { "name": "status", "type": "CharField(10)", "required": true, "choices": ["confirmado", "declinado"] },
+            { "name": "total_pessoas", "type": "PositiveIntegerField", "required": true, "default": 1 },
+            { "name": "observacoes", "type": "TextField", "required": false },
+            { "name": "data_resposta", "type": "DateTimeField", "required": true, "auto_now": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Acompanhante",
+          "fields": [
+            { "name": "id", "type": "BigAutoField", "required": true },
+            { "name": "resposta", "type": "ForeignKey(Resposta)", "required": true },
+            { "name": "nome_completo", "type": "CharField(200)", "required": true },
+            { "name": "documento", "type": "CharField(50)", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Se status for 'declinado', total_pessoas deve ser 0",
+          "location": "eventos/forms.py:46-48",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Se status for 'confirmado', total_pessoas deve ser >= 1",
+          "location": "eventos/forms.py:49-51",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Organizador precisa ser is_staff (não apenas is_authenticated)",
+          "location": "eventos/views.py:104-106",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Acompanhantes são deletados e recriados a cada atualização de resposta",
+          "location": "eventos/views.py:48-58",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Código de acesso é UUID v4 hex[:8] em maiúsculas",
+          "location": "eventos/models.py:5-6",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Convite só pode ter uma resposta (OneToOneField)",
+          "location": "eventos/models.py:35",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["django.contrib.auth"],
+      "algorithms": [
+        {
+          "name": "Geração de código de acesso",
+          "description": "uuid.uuid4().hex[:8].upper() — 8 chars hex aleatórios",
+          "location": "eventos/models.py:5-6",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Cálculo de taxa de resposta",
+          "description": "round((respondidos / total_convites) * 100, 1)",
+          "location": "eventos/views.py:121-123",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Criação em lote de convites",
+          "description": "Loop de 1 a 'quantidade' criando Convites com nome sequencial",
+          "location": "eventos/views.py:297-325",
+          "confidence": "confirmed"
+        }
+      ],
+      "complexity": "medium"
+    }
+  ]
+}

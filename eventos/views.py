@@ -110,13 +110,14 @@ def is_organizador(user):
 def dashboard_view(request):
     """Página principal do dashboard do organizador."""
     eventos = Evento.objects.filter(organizador=request.user).order_by('-data')
+    convites_do_organizador = Convite.objects.filter(evento__organizador=request.user)
     
-    total_convites = Convite.objects.count()
-    convites_respondidos = Convite.objects.filter(resposta__isnull=False).count()
-    convites_pendentes = Convite.objects.filter(resposta__isnull=True).count()
+    total_convites = convites_do_organizador.count()
+    convites_respondidos = convites_do_organizador.filter(resposta__isnull=False).count()
+    convites_pendentes = convites_do_organizador.filter(resposta__isnull=True).count()
     
-    confirmados = Resposta.objects.filter(status='confirmado').count()
-    declinados = Resposta.objects.filter(status='declinado').count()
+    confirmados = Resposta.objects.filter(convite__evento__organizador=request.user, status='confirmado').count()
+    declinados = Resposta.objects.filter(convite__evento__organizador=request.user, status='declinado').count()
     
     taxa_resposta = 0
     if total_convites > 0:
@@ -152,12 +153,13 @@ def dashboard_view(request):
 @user_passes_test(is_organizador)
 def estatisticas_dashboard_view(request):
     """Painel de estatísticas de convites."""
-    total_convites = Convite.objects.count()
-    convites_respondidos = Convite.objects.filter(resposta__isnull=False).count()
-    convites_pendentes = Convite.objects.filter(resposta__isnull=True).count()
+    convites_do_organizador = Convite.objects.filter(evento__organizador=request.user)
+    total_convites = convites_do_organizador.count()
+    convites_respondidos = convites_do_organizador.filter(resposta__isnull=False).count()
+    convites_pendentes = convites_do_organizador.filter(resposta__isnull=True).count()
     
-    confirmados = Resposta.objects.filter(status='confirmado').count()
-    declinados = Resposta.objects.filter(status='declinado').count()
+    confirmados = Resposta.objects.filter(convite__evento__organizador=request.user, status='confirmado').count()
+    declinados = Resposta.objects.filter(convite__evento__organizador=request.user, status='declinado').count()
 
     eventos = Evento.objects.filter(organizador=request.user)
     eventos_com_estatisticas = []

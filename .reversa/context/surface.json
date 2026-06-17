@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-06-17T00:00:00Z",
+  "project_root": "/home/israelsilva/projects/gestao_eventos",
+  "languages": [
+    { "name": "Python", "extensions": [".py"], "file_count": 15 },
+    { "name": "HTML", "extensions": [".html"], "file_count": 13 }
+  ],
+  "primary_language": "Python",
+  "frameworks": [
+    { "name": "Django", "version": "6.0.3", "source": "requirements.txt" }
+  ],
+  "package_manager": "pip",
+  "entry_points": [
+    { "path": "manage.py", "type": "app_entry" },
+    { "path": "gestao_eventos/wsgi.py", "type": "server_entry" },
+    { "path": "gestao_eventos/asgi.py", "type": "server_entry" }
+  ],
+  "config_files": [
+    "gestao_eventos/settings.py",
+    ".env.example",
+    ".env"
+  ],
+  "database_hints": [
+    { "path": "eventos/migrations/", "type": "migrations_dir" },
+    { "path": "db.sqlite3", "type": "sqlite_db" }
+  ],
+  "test_framework": "unittest",
+  "test_file_count": 0,
+  "modules": [
+    "eventos"
+  ],
+  "apps": [
+    { "name": "eventos", "path": "eventos/", "models": ["Evento", "Convite", "Resposta", "Acompanhante"] }
+  ],
+  "templates": [
+    "base.html", "home.html", "responder_evento.html", "sucesso.html",
+    "registration/login.html",
+    "dashboard/dashboard.html", "dashboard/detalhe_evento.html", "dashboard/estatisticas.html",
+    "dashboard/form_evento.html", "dashboard/gerenciar_convites.html", "dashboard/criar_convites_multiplos.html",
+    "admin/index.html", "admin/estatisticas.html"
+  ],
+  "urls": [
+    { "path": "/", "name": "home", "view": "home_view", "auth": "public" },
+    { "path": "/evento/<str:codigo_acesso>/", "name": "responder_evento", "view": "responder_evento_view", "auth": "public" },
+    { "path": "/sucesso/", "name": "sucesso", "view": "sucesso_view", "auth": "public" },
+    { "path": "/login/", "name": "login", "view": "auth_views.LoginView", "auth": "public" },
+    { "path": "/logout/", "name": "logout", "view": "auth_views.LogoutView", "auth": "post_only" },
+    { "path": "/dashboard/", "name": "dashboard", "view": "dashboard_view", "auth": "staff" },
+    { "path": "/dashboard/estatisticas/", "name": "estatisticas", "view": "estatisticas_dashboard_view", "auth": "staff" },
+    { "path": "/dashboard/criar/", "name": "criar_evento", "view": "criar_evento_view", "auth": "staff" },
+    { "path": "/dashboard/evento/<int:evento_id>/", "name": "detalhe_evento", "view": "detalhe_evento_dashboard_view", "auth": "staff" },
+    { "path": "/dashboard/evento/<int:evento_id>/editar/", "name": "editar_evento", "view": "editar_evento_view", "auth": "staff" },
+    { "path": "/dashboard/evento/<int:evento_id>/convites/", "name": "gerenciar_convites", "view": "gerenciar_convites_view", "auth": "staff" },
+    { "path": "/dashboard/evento/<int:evento_id>/convites/criar/", "name": "criar_convites_multiplos", "view": "criar_convites_multiplos_view", "auth": "staff" },
+    { "path": "/dashboard/convite/<int:convite_id>/excluir/", "name": "excluir_convite", "view": "excluir_convite_view", "auth": "staff" },
+    { "path": "/dashboard/convite/<int:convite_id>/link/", "name": "gerar_link_convite", "view": "gerar_link_convite_view", "auth": "staff" }
+  ],
+  "total_files": 42,
+  "organization_suggestion": {
+    "granularity": "endpoint",
+    "rationale": "Django possui roteamento centralizado em urls.py com 14 rotas bem definidas entre públicas e protegidas.",
+    "signals": [
+      { "type": "centralized_routing", "evidence": ["eventos/urls.py", "gestao_eventos/urls.py"] }
+    ],
+    "features": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-corrigir-estatisticas-dashboard",
+  "feature-id": "001",
+  "short-name": "corrigir-estatisticas-dashboard",
+  "started-at": "2026-06-17T00:00:00Z",
+  "current-stage": "coding-em-progresso",
+  "stages-completed": ["requirements", "plan", "to-do"],
+  "paused-features": []
+}
