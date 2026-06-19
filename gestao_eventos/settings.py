@@ -53,11 +53,14 @@ WSGI_APPLICATION = 'gestao_eventos.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='gestao_eventos'),
-        'USER': config('DB_USER', default='gestao_user'),
+        'NAME': config('DB_NAME', default='postgres'),
+        'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432', cast=int),
+        'OPTIONS': {
+            'sslmode': config('DB_SSL_MODE', default='prefer'),
+        },
     }
 }
 
