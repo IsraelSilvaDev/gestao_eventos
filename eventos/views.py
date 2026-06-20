@@ -344,30 +344,4 @@ def gerar_link_convite_view(request, convite_id):
     return JsonResponse({'link': request.build_absolute_uri(f'/evento/{convite.codigo_acesso}/')})
 
 
-import os
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.conf import settings as django_settings
-@csrf_exempt
-def debug_storage_view(request):
-    from django.core.files.storage import default_storage
-    from django.utils.module_loading import import_string
-    import importlib
-    checks = []
-    for mod in ['storages', 'storages.backends.s3', 'boto3']:
-        try:
-            importlib.import_module(mod)
-            checks.append(f'{mod}: OK')
-        except Exception as e:
-            checks.append(f'{mod}: {e}')
-    backend = django_settings.STORAGES.get('default', {}).get('BACKEND', 'N/A')
-    try:
-        cls = import_string(backend)
-        checks.append(f'resolve: OK -> {cls.__name__}')
-    except Exception as e:
-        checks.append(f'resolve: {e}')
-    return JsonResponse({
-        'default_storage': str(default_storage.__class__),
-        'STORAGES_default_BACKEND': backend,
-        'checks': checks,
-    })
+
