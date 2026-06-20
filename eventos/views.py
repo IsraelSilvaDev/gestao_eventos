@@ -346,16 +346,19 @@ def gerar_link_convite_view(request, convite_id):
 
 import os
 from django.conf import settings as django_settings
-@login_required(login_url='login')
-@user_passes_test(is_organizador)
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 def debug_storage_view(request):
     from django.core.files.storage import default_storage
+    import sys
     return JsonResponse({
         'default_storage': str(default_storage.__class__),
         'has_S3_ACCESS_KEY_env': 'S3_ACCESS_KEY' in os.environ,
         'has_S3_SECRET_KEY_env': 'S3_SECRET_KEY' in os.environ,
-        'DEFAULT_FILE_STORAGE': django_settings.DEFAULT_FILE_STORAGE if hasattr(django_settings, 'DEFAULT_FILE_STORAGE') else 'N/A',
+        'DEFAULT_FILE_STORAGE': getattr(django_settings, 'DEFAULT_FILE_STORAGE', 'N/A'),
         'MEDIA_URL': django_settings.MEDIA_URL,
         'has_AWS_ACCESS_KEY_ID': hasattr(django_settings, 'AWS_ACCESS_KEY_ID'),
-        'keys_from_os': os.environ.get('S3_ACCESS_KEY', 'NOT_FOUND')[:8] if os.environ.get('S3_ACCESS_KEY') else 'NONE',
+        'keys_from_os': (os.environ.get('S3_ACCESS_KEY', '')[:8] + '...') if os.environ.get('S3_ACCESS_KEY') else 'NONE',
+        'keys_from_config': (django_settings.AWS_ACCESS_KEY_ID[:8] + '...') if hasattr(django_settings, 'AWS_ACCESS_KEY_ID') else 'N/A',
+        'python_path': str(sys.path[:3]),
     })
