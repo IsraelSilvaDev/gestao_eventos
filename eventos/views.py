@@ -342,3 +342,20 @@ def gerar_link_convite_view(request, convite_id):
     """Gerar link de convite para copiar."""
     convite = get_object_or_404(Convite, id=convite_id, evento__organizador=request.user)
     return JsonResponse({'link': request.build_absolute_uri(f'/evento/{convite.codigo_acesso}/')})
+
+
+import os
+from django.conf import settings as django_settings
+@login_required(login_url='login')
+@user_passes_test(is_organizador)
+def debug_storage_view(request):
+    from django.core.files.storage import default_storage
+    return JsonResponse({
+        'default_storage': str(default_storage.__class__),
+        'has_S3_ACCESS_KEY_env': 'S3_ACCESS_KEY' in os.environ,
+        'has_S3_SECRET_KEY_env': 'S3_SECRET_KEY' in os.environ,
+        'DEFAULT_FILE_STORAGE': django_settings.DEFAULT_FILE_STORAGE if hasattr(django_settings, 'DEFAULT_FILE_STORAGE') else 'N/A',
+        'MEDIA_URL': django_settings.MEDIA_URL,
+        'has_AWS_ACCESS_KEY_ID': hasattr(django_settings, 'AWS_ACCESS_KEY_ID'),
+        'keys_from_os': os.environ.get('S3_ACCESS_KEY', 'NOT_FOUND')[:8] if os.environ.get('S3_ACCESS_KEY') else 'NONE',
+    })

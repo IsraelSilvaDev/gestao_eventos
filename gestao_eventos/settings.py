@@ -84,11 +84,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Media / File Storage ──────────────────────────────────────
-if config('S3_ACCESS_KEY', default=None) and config('S3_SECRET_KEY', default=None):
+_s3_key = os.environ.get('S3_ACCESS_KEY') or config('S3_ACCESS_KEY', default=None)
+_s3_secret = os.environ.get('S3_SECRET_KEY') or config('S3_SECRET_KEY', default=None)
+
+if _s3_key and _s3_secret:
     MEDIA_URL = f'https://dzrpittkqggnnpeafjkz.supabase.co/storage/v1/object/public/eventos-banners/'
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_ACCESS_KEY_ID = config('S3_ACCESS_KEY')
-    AWS_SECRET_ACCESS_KEY = config('S3_SECRET_KEY')
+    AWS_ACCESS_KEY_ID = _s3_key
+    AWS_SECRET_ACCESS_KEY = _s3_secret
     AWS_STORAGE_BUCKET_NAME = 'eventos-banners'
     AWS_S3_ENDPOINT_URL = 'https://dzrpittkqggnnpeafjkz.supabase.co/storage/v1/s3'
     AWS_S3_REGION_NAME = 'auto'

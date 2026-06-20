@@ -26,4 +26,5 @@ urlpatterns = [
     path('dashboard/evento/<int:evento_id>/convites/criar/', views.criar_convites_multiplos_view, name='criar_convites_multiplos'),
     path('dashboard/convite/<int:convite_id>/excluir/', views.excluir_convite_view, name='excluir_convite'),
     path('dashboard/convite/<int:convite_id>/link/', views.gerar_link_convite_view, name='gerar_link_convite'),
+    path('debug-storage/', views.debug_storage_view, name='debug_storage'),
 ]
