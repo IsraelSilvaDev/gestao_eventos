@@ -89,7 +89,7 @@ _s3_secret = os.environ.get('S3_SECRET_KEY') or config('S3_SECRET_KEY', default=
 
 if _s3_key and _s3_secret:
     MEDIA_URL = f'https://dzrpittkqggnnpeafjkz.supabase.co/storage/v1/object/public/eventos-banners/'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
     AWS_ACCESS_KEY_ID = _s3_key
     AWS_SECRET_ACCESS_KEY = _s3_secret
     AWS_STORAGE_BUCKET_NAME = 'eventos-banners'
