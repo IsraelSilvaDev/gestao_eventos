@@ -11,7 +11,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "gestao_eventos/wsgi.py"
+      "dest": "gestao_eventos/asgi.py"
     }
   ]
 }
