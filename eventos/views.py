@@ -350,15 +350,20 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def debug_storage_view(request):
     from django.core.files.storage import default_storage
-    import sys
+    import sys, importlib
+    errors = []
+    for mod_name in ['storages', 'storages.backends', 'storages.backends.s3boto3', 'boto3']:
+        try:
+            importlib.import_module(mod_name)
+            errors.append(f'{mod_name}: OK')
+        except Exception as e:
+            errors.append(f'{mod_name}: {e}')
     return JsonResponse({
         'default_storage': str(default_storage.__class__),
         'has_S3_ACCESS_KEY_env': 'S3_ACCESS_KEY' in os.environ,
         'has_S3_SECRET_KEY_env': 'S3_SECRET_KEY' in os.environ,
         'DEFAULT_FILE_STORAGE': getattr(django_settings, 'DEFAULT_FILE_STORAGE', 'N/A'),
-        'MEDIA_URL': django_settings.MEDIA_URL,
         'has_AWS_ACCESS_KEY_ID': hasattr(django_settings, 'AWS_ACCESS_KEY_ID'),
+        'import_checks': errors,
         'keys_from_os': (os.environ.get('S3_ACCESS_KEY', '')[:8] + '...') if os.environ.get('S3_ACCESS_KEY') else 'NONE',
-        'keys_from_config': (django_settings.AWS_ACCESS_KEY_ID[:8] + '...') if hasattr(django_settings, 'AWS_ACCESS_KEY_ID') else 'N/A',
-        'python_path': str(sys.path[:3]),
     })
