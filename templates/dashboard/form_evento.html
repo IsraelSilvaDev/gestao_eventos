@@ -29,12 +29,16 @@
                     <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                     {% if field.name == 'banner' %}
                         {% if form.instance.banner %}
-                        <div class="mb-2">
-                            <img src="/media/{{ form.instance.banner }}" alt="Banner atual" class="img-thumbnail" style="max-height: 200px;">
+                        <div class="mb-2" id="preview-atual">
+                            <img src="{{ form.instance.banner.url }}" alt="Banner atual" class="img-thumbnail" style="max-height: 200px;">
                             <p class="text-muted small mt-1">Banner atual. Envie uma nova imagem para substituir.</p>
                         </div>
                         {% endif %}
-                        <input type="file" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" accept="image/*">
+                        <div class="mb-2" id="preview-novo" style="display: none;">
+                            <img id="preview-imagem" src="#" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
+                            <p class="text-muted small mt-1">Preview da nova imagem.</p>
+                        </div>
+                        <input type="file" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" accept="image/*" onchange="previewBanner(this);">
                     {% else %}
                         {{ field }}
                     {% endif %}
@@ -63,4 +67,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewBanner(input) {
+    const preview = document.getElementById('preview-novo');
+    const previewImg = document.getElementById('preview-imagem');
+    const previewAtual = document.getElementById('preview-atual');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+            if (previewAtual) previewAtual.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}

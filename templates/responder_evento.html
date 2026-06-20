@@ -11,7 +11,7 @@
     <div class="card-body p-4 p-md-5">
         {% if evento.banner %}
         <div class="banner-container mb-4 text-center">
-            <img src="/media/{{ evento.banner }}" alt="Banner do evento" class="banner-animated img-fluid rounded">
+            <img src="{{ evento.banner.url }}" alt="Banner do evento" class="banner-animated img-fluid rounded">
         </div>
         {% endif %}
         <div class="event-details p-4 text-center">
