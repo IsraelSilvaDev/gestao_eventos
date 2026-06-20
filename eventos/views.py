@@ -350,7 +350,8 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def debug_storage_view(request):
     from django.core.files.storage import default_storage
-    import sys, importlib
+    from django.utils.module_loading import import_string
+    import sys, importlib, os
     errors = []
     for mod_name in ['storages', 'storages.backends', 'storages.backends.s3boto3', 'boto3']:
         try:
@@ -358,6 +359,34 @@ def debug_storage_view(request):
             errors.append(f'{mod_name}: OK')
         except Exception as e:
             errors.append(f'{mod_name}: {e}')
+    
+    # Try import_string
+    try:
+        cls = import_string('storages.backends.s3boto3.S3Boto3Storage')
+        errors.append(f'import_string: OK -> {cls}')
+        instance = cls()
+        errors.append(f'instantiate: OK -> {instance.__class__}')
+    except Exception as e:
+        errors.append(f'import_string: {e}')
+    
+    # Try creating storage with env vars
+    try:
+        from storages.backends.s3boto3 import S3Boto3Storage
+        s3 = S3Boto3Storage(
+            access_key=os.environ.get('S3_ACCESS_KEY'),
+            secret_key=os.environ.get('S3_SECRET_KEY'),
+            bucket_name='eventos-banners',
+            endpoint_url='https://dzrpittkqggnnpeafjkz.supabase.co/storage/v1/s3',
+            region_name='auto',
+        )
+        errors.append(f'direct_s3: OK -> {s3.__class__}')
+    except Exception as e:
+        errors.append(f'direct_s3: {e}')
+    
+    # Check what Django's storage class resolves to
+    from django.conf import settings
+    errors.append(f'setting_DEFAULT_FILE_STORAGE: {getattr(settings, "DEFAULT_FILE_STORAGE", "N/A")}')
+    
     return JsonResponse({
         'default_storage': str(default_storage.__class__),
         'has_S3_ACCESS_KEY_env': 'S3_ACCESS_KEY' in os.environ,
