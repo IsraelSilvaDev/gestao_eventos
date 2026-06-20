@@ -360,13 +360,14 @@ def debug_storage_view(request):
             checks.append(f'{mod}: OK')
         except Exception as e:
             checks.append(f'{mod}: {e}')
+    backend = django_settings.STORAGES.get('default', {}).get('BACKEND', 'N/A')
     try:
-        cls = import_string(django_settings.DEFAULT_FILE_STORAGE)
+        cls = import_string(backend)
         checks.append(f'resolve: OK -> {cls.__name__}')
     except Exception as e:
         checks.append(f'resolve: {e}')
     return JsonResponse({
         'default_storage': str(default_storage.__class__),
-        'DEFAULT_FILE_STORAGE': django_settings.DEFAULT_FILE_STORAGE,
+        'STORAGES_default_BACKEND': backend,
         'checks': checks,
     })
